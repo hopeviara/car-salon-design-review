@@ -242,6 +242,8 @@
     .hero-salon { display:block; font-family:'Salon Script', cursive; font-size:clamp(16px, 5vw, 24px); line-height:1; color:#e7e9eb; background:linear-gradient(180deg,#fff 3%,#d6d9dd 32%,#858b91 49%,#f9fafb 66%,#aeb4ba 100%); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 1px 1px #000); }
     .car-stage.video-running .hero-wordmark { opacity:0; }
     .car-stage.video-running .hero-wordmark.is-visible { opacity:1; }
+    .hero-credit { order:3; margin:12px 0 0; color:#c4c4c4; font-size:11px; line-height:1.5; text-align:center; }
+    .hero-credit a { color:#f0bd9e; text-decoration:underline; text-underline-offset:2px; }
     .car-copy { order:2; width:100%; padding:13px 0 0; border-top:1px solid #d8d8d8; text-align:center; }
     .car-copy strong { font-size:13px; }
     .profile-car, .profile-car .wheel-spin { animation:none; }
@@ -411,9 +413,8 @@
         <div class="car-card" id="vehicle-showcase">
           <div class="car-copy"><span class="demo-tag" id="demo-active-tag" hidden>DEMO · FICTIONAL</span><strong id="home-car-title">Kaun kehta hai sirf insaan tan hote hain?</strong><span id="home-car-subtitle">Gaadi ko bhi pampering chahiye!</span><span id="home-car-detail">Set up a profile to personalize your car details.</span></div>
           <div class="car-stage">
-            <img class="hero-still" src="https://hopeviara.github.io/car-salon-mobile-demo/assets/gdd1-shutter-poster.jpg" alt="A closed garage shutter, from the opening video" width="1280" height="720">
-            <video class="hero-video" id="hero-video" src="https://hopeviara.github.io/car-salon-mobile-demo/assets/gdd1-hero.webm" poster="https://hopeviara.github.io/car-salon-mobile-demo/assets/gdd1-shutter-poster.jpg" preload="metadata" muted playsinline aria-hidden="true"></video>
-            <span class="hero-wordmark"><span class="hero-name" role="img" aria-label="Car Salon"><img class="hero-car-lettering" src="https://hopeviara.github.io/car-salon-mobile-demo/assets/garage-car-lettering.png" alt="" width="389" height="98"><span class="hero-salon" aria-hidden="true">Salon</span></span></span>
+            <img class="hero-still" src="assets/shutter-reveal-poster.jpg" alt="A closed garage shutter in the Car Salon reveal" width="960" height="540">
+            <video class="hero-video" id="hero-video" src="assets/car-salon-shutter-reveal.mp4" poster="assets/shutter-reveal-poster.jpg" preload="metadata" muted playsinline aria-label="A garage shutter rises and a glossy red car rolls out"></video>
             <img class="car-image" id="default-car" src="https://hopeviara.github.io/car-salon-mobile-demo/assets/bmw-x6m.webp" alt="Illustrative red BMW X6 M sample art, not a customer vehicle" width="1800" height="1280" fetchpriority="high">
             <svg class="profile-car" id="profile-car" viewBox="0 0 260 150" role="img" aria-label="Personalized vehicle animation" hidden>
               <ellipse cx="132" cy="120" rx="105" ry="11" fill="rgba(0,0,0,.38)"/>
@@ -428,6 +429,7 @@
               <text id="vehicle-plate" x="132" y="95" fill="#13272c" text-anchor="middle" font-size="7" font-weight="800" letter-spacing=".5">REGISTRATION</text>
             </svg>
           </div>
+          <p class="hero-credit">Car model: <a href="https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept">Car Concept</a> by Eric Chadwick for Darmstadt Graphics Group GmbH, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Adapted, animated and relit; logos removed.</p>
         </div>
         <div class="section-head"><h2>Choose your wash</h2><span>Pick a service to book</span></div>
         <div class="service-list">
@@ -734,9 +736,7 @@
       document.getElementById('home-view').prepend(document.getElementById('vehicle-showcase'));
       const heroVideo = document.getElementById('hero-video');
       const heroStage = heroVideo.closest('.car-stage');
-      const heroWordmark = heroStage.querySelector('.hero-wordmark');
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-      const shutterClosedAt = 7.8;
       let heroStarted = false;
       function showHeroFallback() {
         heroVideo.pause();
@@ -749,19 +749,13 @@
         if (heroStarted) return;
         heroStarted = true;
         heroStage.classList.add('video-running');
-        heroWordmark.classList.remove('is-visible');
         heroVideo.muted = true;
         const playback = heroVideo.play();
         if (playback && typeof playback.catch === 'function') playback.catch(showHeroFallback);
       }
-      function updateHeroWordmark() {
-        heroWordmark.classList.toggle('is-visible', heroVideo.currentTime >= shutterClosedAt);
-      }
       heroVideo.addEventListener('playing', () => {
-        if (reducedMotion.matches) showHeroFallback(); else { heroVideo.classList.add('is-playing'); updateHeroWordmark(); }
+        if (reducedMotion.matches) showHeroFallback(); else heroVideo.classList.add('is-playing');
       });
-      heroVideo.addEventListener('timeupdate', updateHeroWordmark);
-      heroVideo.addEventListener('ended', updateHeroWordmark);
       heroVideo.addEventListener('error', showHeroFallback);
       if (reducedMotion.addEventListener) reducedMotion.addEventListener('change', updateHeroMotion);
       else if (reducedMotion.addListener) reducedMotion.addListener(updateHeroMotion);
