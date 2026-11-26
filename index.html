@@ -353,7 +353,6 @@
     /* The review keeps its navigation together at the top. */
     .app-shell { padding-bottom:calc(32px + env(safe-area-inset-bottom)); }
     .topbar { position:sticky; top:env(safe-area-inset-top, 0px); z-index:20; display:flex; flex-direction:column; align-items:stretch; min-height:0; gap:0; margin-bottom:24px; padding:0 0 8px; background:rgba(0,0,0,.97); }
-    .topbar .brand { align-self:flex-start; min-height:48px; }
     .topbar .tabbar { position:static; transform:none; width:100%; padding:0; gap:4px; border:0; background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
     .topbar .tab { min-width:0; min-height:52px; }
     .toast { bottom:calc(20px + env(safe-area-inset-bottom)); }
@@ -364,18 +363,25 @@
     .startup-intro { position:fixed; inset:0; z-index:100; display:grid; place-items:center; background:#000; }
     .startup-intro video { width:100%; max-height:100%; object-fit:contain; }
     .startup-skip { position:absolute; top:max(18px,env(safe-area-inset-top)); right:max(18px,env(safe-area-inset-right)); min-width:76px; min-height:44px; padding:10px 16px; border:1px solid #df6c49; border-radius:999px; background:rgba(28,18,16,.92); color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+    /* A review-only opening card reuses the exact former header wordmark. */
+    .startup-opening { position:absolute; inset:0; z-index:1; display:grid; place-items:center; background:#000; pointer-events:none; }
+    .startup-opening .brand-logo { gap:clamp(5px,1.55vw,8px); }
+    .startup-opening .brand-logo img { width:clamp(110px,34vw,176px); height:auto; }
+    .startup-opening .brand-salon { font-size:clamp(30px,9.27vw,48px); }
+    .startup-skip { z-index:2; }
+
   </style>
 </head>
 <body>
   <section class="startup-intro" id="startup-intro" role="dialog" aria-modal="true" aria-label="Car Salon introduction" hidden>
     <video id="startup-video" data-src="https://hopeviara.github.io/car-salon-mobile-demo/assets/car-salon-startup-intro.mp4" preload="none" muted playsinline aria-hidden="true"></video>
+    <div class="startup-opening" id="startup-opening" aria-label="Car Salon" role="img">
+        <span class="brand-logo" aria-hidden="true"><img src="https://hopeviara.github.io/car-salon-mobile-demo/assets/garage-car-lettering.png" alt="" width="389" height="98"><span class="brand-salon">Salon</span></span>
+    </div>
     <button class="startup-skip" id="startup-skip" type="button">Skip intro</button>
   </section>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#home" aria-label="Car Salon home" data-nav="home">
-        <span class="brand-logo" aria-hidden="true"><img src="https://hopeviara.github.io/car-salon-mobile-demo/assets/garage-car-lettering.png" alt="" width="389" height="98"><span class="brand-salon">Salon</span></span>
-      </a>
       <nav class="tabbar" aria-label="App navigation">
         <button class="tab active" type="button" data-nav="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3.5 10 8.5-7 8.5 7v10a1 1 0 0 1-1 1h-5.4v-6.4H9.9V21H4.5a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>Home</span></button>
         <button class="tab" type="button" data-nav="book"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 3v4m8-4v4M4 10h16m-8 4v5m-2.5-2.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Book</span></button>
@@ -666,6 +672,7 @@
       const intro = document.getElementById('startup-intro');
       const video = document.getElementById('startup-video');
       const skip = document.getElementById('startup-skip');
+      const opening = document.getElementById('startup-opening');
       const app = document.querySelector('.app-shell');
       const tabs = document.querySelector('.tabbar');
       const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -682,17 +689,28 @@
       document.body.classList.add('intro-playing');
       intro.hidden = false;
       let timeout;
+      let openingFrame;
+      function updateOpening() {
+        if (!window.carSalonIntroActive) return;
+        const time = video.currentTime || 0;
+        opening.style.opacity = String(Math.max(0, Math.min(1, (3.05 - time) / .35)));
+        opening.querySelector('.brand-logo').style.opacity = String(Math.max(0, Math.min(1, (2.7 - time) / .35)));
+        if (time < 3.05) openingFrame = requestAnimationFrame(updateOpening);
+        else opening.hidden = true;
+      }
+      openingFrame = requestAnimationFrame(updateOpening);
       function finishIntro() {
         if (!window.carSalonIntroActive) return;
         window.carSalonIntroActive = false;
         clearTimeout(timeout);
+        cancelAnimationFrame(openingFrame);
         const wasFocused = document.activeElement === skip;
         video.pause();
         intro.hidden = true;
         app.inert = false;
         tabs.inert = false;
         document.body.classList.remove('intro-playing');
-        if (wasFocused) document.querySelector('.brand').focus();
+        if (wasFocused) document.querySelector('.tab[data-nav="home"]').focus();
         window.dispatchEvent(new Event('car-salon-intro-finished'));
       }
       skip.addEventListener('click', finishIntro);
